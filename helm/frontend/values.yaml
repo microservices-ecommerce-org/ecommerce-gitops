@@ -1,0 +1,54 @@
+replicaCount: 3
+
+image:
+  repository: 887793660251.dkr.ecr.eu-north-1.amazonaws.com/frontend-repo
+  pullPolicy: IfNotPresent
+  tag: "4"
+
+service:
+  type: ClusterIP
+  port: 80
+  name: frontend-service
+
+ingress:
+  enabled: true
+  className: alb
+  annotations: 
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/group.name: production
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP":80}]'
+  hosts:
+    - host: ""
+      paths:
+        - path: /
+          pathType: Prefix
+
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 80
+
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 80
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+autoscaling:
+  enabled: false
+  minReplicas: 3
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 80
+
+

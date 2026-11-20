@@ -1,0 +1,38 @@
+replicaCount: 3
+
+image:
+  repository: 887793660251.dkr.ecr.eu-north-1.amazonaws.com/inventory-service-repo
+  pullPolicy: IfNotPresent
+  tag: "1"
+
+service:
+  type: ClusterIP
+  port: 8083
+  name: inventory-service-go
+
+resources: 
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+livenessProbe:
+  httpGet:
+    path: /health
+    port: 8083
+readinessProbe:
+  httpGet:
+    path: /health
+    port: 8083
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 80
+
+

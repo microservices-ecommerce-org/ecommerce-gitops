@@ -1,0 +1,106 @@
+replicaCount: 3
+
+image:
+  repository: 887793660251.dkr.ecr.eu-north-1.amazonaws.com/inventory-service-repo
+  pullPolicy: IfNotPresent
+  tag: "1"
+
+serviceAccount:
+  name: "app-sa"
+
+service:
+  type: ClusterIP
+  port: 8081
+  name: product-service-java
+
+resources:
+  limits:
+    cpu: 100m
+    memory: 128Mi
+  requests:
+    cpu: 100m
+    memory: 128Mi
+
+livenessProbe:
+  httpGet:
+    path: /actuator/health/liveness
+    port: 8081
+
+readinessProbe:
+  httpGet:
+    path: /actuator/health/readiness
+    port: 8081
+  initialDelaySeconds: 5
+  periodSeconds: 10
+
+autoscaling:
+  enabled: true
+  minReplicas: 3
+  maxReplicas: 6
+  targetCPUUtilizationPercentage: 80
+
+volumes: 
+  - name: secrets-store
+    csi:
+      driver: secrets-store.csi.k8s.io
+      readOnly: true
+      volumeAttributes:
+        secretProviderClass: postgres-secret
+
+volumeMounts: 
+  - name: secrets-store
+    mountPath: "/mnt/secrets-store"
+    readOnly: true
+
+secrets:
+  enabled: true
+
+  name: postgres-secret
+
+  provider: aws
+
+  region: eu-north-1
+
+  usePodIdentity: "true"
+
+  objectName: "rds!db-4891000d-a490-4c78-9dc4-dbbf68484b8b"
+
+  objectType: secretsmanager
+
+  jmesPath:
+    - path: username
+      objectAlias: username
+
+    - path: password
+      objectAlias: password
+
+  secretObjects:
+    - secretName: postgres-credentials
+      type: Opaque
+      data:
+        - objectName: username
+          key: username
+
+        - objectName: password
+          key: password
+
+env:
+  - name: SPRING_DATASOURCE_URL
+    value: "jdbc:postgresql://my-postgres-db.cjikuowwk5tc.eu-north-1.rds.amazonaws.com:5432/appdb"
+
+  - name: SPRING_DATASOURCE_USERNAME
+    valueFrom:
+      secretKeyRef:
+        name: postgres-credentials
+        key: username
+
+  - name: SPRING_DATASOURCE_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: postgres-credentials
+        key: password
+
+  - name: SPRING_JPA_HIBERNATE_DDL_AUTO
+    value: "update"
+
+
