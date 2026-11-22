@@ -1,0 +1,18 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  name: frontend-app
+  namespace: argocd
+
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/microservices-ecommerce-org/ecommerce-gitops
+    targetRevision: main
+    path: helm/frontend
+
+  destination:
+    server: https://kubernetes.default.svc
+      selfHeal: truelt
