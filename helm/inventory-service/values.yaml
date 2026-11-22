@@ -10,10 +10,14 @@ service:
   port: 8083
   name: inventory-service-go
 
+serviceAccount:
+  create: false
+  name: default
+
 resources: 
   limits:
-    cpu: 100m
-    memory: 128Mi
+    cpu: 500m
+    memory: 512Mi
   requests:
     cpu: 100m
     memory: 128Mi
@@ -22,12 +26,15 @@ livenessProbe:
   httpGet:
     path: /health
     port: 8083
+  initialDelaySeconds: 5
+  periodSeconds: 15
+
 readinessProbe:
   httpGet:
     path: /health
     port: 8083
   initialDelaySeconds: 5
-  periodSeconds: 10
+  periodSeconds: 15
 
 autoscaling:
   enabled: true
